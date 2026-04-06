@@ -18,6 +18,7 @@ import Spinner from "@/components/ui/Spinner";
 import { CheckoutContext } from "@/components/contexts/CheckoutContext";
 import type { PreviousAddress } from "@/components/contexts/CheckoutContext";
 
+export const dynamic = 'force-dynamic';
 export default function CheckoutPage() {
 
   const searchParams = useSearchParams();

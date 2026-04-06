@@ -1,7 +1,9 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { CheckoutDetails } from "@/lib/types";
 
@@ -18,9 +20,11 @@ import Spinner from "@/components/ui/Spinner";
 import { CheckoutContext } from "@/components/contexts/CheckoutContext";
 import type { PreviousAddress } from "@/components/contexts/CheckoutContext";
 
-export const dynamic = 'force-dynamic';
-export default function CheckoutPage() {
+/* --------------------------------------------------
+   MAIN CONTENT (moved into Suspense-safe component)
+-------------------------------------------------- */
 
+function CheckoutPageContent() {
   const searchParams = useSearchParams();
 
   const shop = searchParams.get("shop") || "";
@@ -37,7 +41,6 @@ export default function CheckoutPage() {
 
   const [leftView, setLeftView] = useState<"summary" | "coupons">("summary");
   const [previousAddresses, setPreviousAddresses] = useState<PreviousAddress[]>([]);
-
 
   const fetchDetails = useCallback(async () => {
     if (!sessionParam) return;
@@ -57,9 +60,7 @@ export default function CheckoutPage() {
     fetchDetails().finally(() => setLoading(false));
   }, [sessionParam, fetchDetails]);
 
-  /* --------------------------------------------------
-     STEP MAPPING
-  -------------------------------------------------- */
+  /* STEP MAPPING */
 
   const currentStep = details?.step;
 
@@ -73,9 +74,7 @@ export default function CheckoutPage() {
       ? "address"
       : "payment";
 
-  /* --------------------------------------------------
-     MOBILE BACK NAVIGATION
-  -------------------------------------------------- */
+  /* NAVIGATION */
 
   const showBack =
     !!currentStep &&
@@ -84,9 +83,9 @@ export default function CheckoutPage() {
     currentStep !== "FAILED";
 
   function handleClose() {
-    if (window.opener) {
+    if (typeof window !== "undefined" && window.opener) {
       window.close();
-    } else {
+    } else if (typeof window !== "undefined") {
       window.history.back();
     }
   }
@@ -104,11 +103,7 @@ export default function CheckoutPage() {
     }
   }
 
-  /* --------------------------------------------------
-     FOOTER CTA
-     - Desktop: w-40 h-12, right-aligned (unchanged)
-     - Mobile: full width, rounded-2xl
-  -------------------------------------------------- */
+  /* FOOTER */
 
   const showFooter =
     currentStep === "CART" ||
@@ -135,9 +130,10 @@ export default function CheckoutPage() {
         w-full h-14 rounded-2xl
         md:w-full md:h-12 md:rounded-xl
         lg:w-40 lg:h-12 lg:rounded-xl
-        ${canContinue && !ctaLoading
-          ? "bg-[#0B7E63] hover:bg-green-700"
-          : "bg-gray-300 cursor-not-allowed"
+        ${
+          canContinue && !ctaLoading
+            ? "bg-[#0B7E63] hover:bg-green-700"
+            : "bg-gray-300 cursor-not-allowed"
         }
       `}
     >
@@ -146,23 +142,23 @@ export default function CheckoutPage() {
           <Spinner size={18} />
         </span>
       )}
-      <span className={`transition-opacity duration-200 ${ctaLoading ? "opacity-0" : "opacity-100"}`}>
+      <span
+        className={`transition-opacity duration-200 ${
+          ctaLoading ? "opacity-0" : "opacity-100"
+        }`}
+      >
         Continue
       </span>
     </button>
   ) : null;
 
-  /* --------------------------------------------------
-     LEFT PANEL CONTENT (summary, coupon banner, upsell)
-     Shared between desktop left panel and mobile top section
-  -------------------------------------------------- */
+  /* LEFT CONTENT */
 
   const leftContent = (
     <>
       <DeliveryBanner />
 
       <div className={leftView === "summary" ? "block" : "hidden"}>
-
         {details?.step === "COMPLETED" ? (
           <OrderSummary
             checkoutSessionId={null}
@@ -191,7 +187,6 @@ export default function CheckoutPage() {
             checkoutSessionId={details?.checkoutSessionId}
           />
         </div>
-
       </div>
 
       {leftView === "coupons" && (
@@ -203,9 +198,7 @@ export default function CheckoutPage() {
     </>
   );
 
-  /* --------------------------------------------------
-     RIGHT PANEL CONTENT (step forms)
-  -------------------------------------------------- */
+  /* RIGHT CONTENT */
 
   const rightContent = (
     <div className="flex flex-col h-full">
@@ -236,8 +229,14 @@ export default function CheckoutPage() {
   );
 
   return (
-    <CheckoutContext.Provider value={{ details, refreshCheckout: fetchDetails, previousAddresses, setPreviousAddresses }}>
-
+    <CheckoutContext.Provider
+      value={{
+        details,
+        refreshCheckout: fetchDetails,
+        previousAddresses,
+        setPreviousAddresses,
+      }}
+    >
       <CheckoutShell
         footer={footerCTA}
         details={details}
@@ -245,14 +244,21 @@ export default function CheckoutPage() {
         showBack={showBack}
         onBack={handleBack}
         onClose={handleClose}
-        left={
-          <div className="p-4 md:p-6 space-y-4">
-            {leftContent}
-          </div>
-        }
+        left={<div className="p-4 md:p-6 space-y-4">{leftContent}</div>}
         right={rightContent}
       />
-
     </CheckoutContext.Provider>
+  );
+}
+
+/* --------------------------------------------------
+   SUSPENSE WRAPPER (CRITICAL FIX)
+-------------------------------------------------- */
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div className="p-8"><Spinner /></div>}>
+      <CheckoutPageContent />
+    </Suspense>
   );
 }

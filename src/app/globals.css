@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+@theme {
+  --color-brand: #0b7e63;
+  --font-sans: var(--font-dm-sans);
+}
+
+body {
+  font-family: var(--font-dm-sans), sans-serif;
+  cursor: default;
+}
+
+* {
+  cursor: inherit;
+}
+
+a,
+button,
+[role='button'],
+label,
+label[for],
+select,
+summary,
+[onclick],
+.cursor-pointer {
+  cursor: pointer;
+}
+
+input,
+textarea {
+  cursor: text;
+}

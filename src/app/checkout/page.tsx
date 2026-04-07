@@ -169,6 +169,7 @@ function CheckoutPageContent() {
           sessionParam && (
             <OrderSummary
               checkoutSessionId={sessionParam}
+              details={details || undefined}
               mode="preview"
             />
           )

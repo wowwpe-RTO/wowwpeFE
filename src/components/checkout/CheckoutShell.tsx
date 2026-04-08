@@ -39,20 +39,12 @@ export default function CheckoutShell({
 
   return (
     <>
-      {/* =============================================
-          MOBILE LAYOUT — < 768px
-          Full screen, single column
-      ============================================= */}
+      {/* MOBILE */}
       <div className="md:hidden flex flex-col min-h-screen bg-white">
-
-        {/* TOP BAR */}
         <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0 border-b border-gray-100">
           <div className="flex items-center gap-2">
             {showBack && (
-              <button
-                onClick={onBack}
-                className="text-gray-700 hover:text-black transition p-1 -ml-1"
-              >
+              <button onClick={onBack} className="text-gray-700 hover:text-black transition p-1 -ml-1">
                 <ChevronLeft size={22} />
               </button>
             )}
@@ -67,14 +59,10 @@ export default function CheckoutShell({
           </div>
           <div className="flex items-center">{progress}</div>
         </div>
-
-        {/* SCROLLABLE CONTENT */}
         <div className="flex-1 overflow-y-auto pb-28">
           <div className="px-4 pt-4 space-y-3">{left}</div>
           <div className="px-4 pt-3">{right}</div>
         </div>
-
-        {/* STICKY FOOTER */}
         {footer && (
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 shadow-[0_-4px_10px_rgba(0,0,0,0.06)]">
             {footer}
@@ -82,23 +70,12 @@ export default function CheckoutShell({
         )}
       </div>
 
-      {/* =============================================
-          TABLET + DESKTOP LAYOUT — ≥ 768px
-          Centered modal, fluid on tablet, fixed on large desktop
-      ============================================= */}
-      <div className="hidden bg-black/40 md:flex fixed inset-0 items-center justify-center pointer-events-none">
+      {/* TABLET + DESKTOP — light blur overlay, no dark background */}
+      <div className="hidden md:flex fixed inset-0 bg-white/30 backdrop-blur-sm items-center justify-center p-4">
+        <div className="relative bg-white rounded-2xl shadow-2xl flex overflow-hidden w-full md:max-w-[95vw] md:h-auto md:max-h-[95vh] lg:max-w-[960px] lg:h-[70vh]">
 
-        <div className="
-  relative bg-white rounded-2xl  flex overflow-hidden
-  w-full
-  md:max-w-[95vw] md:h-auto md:max-h-[95vh]
-  lg:max-w-[960px] lg:h-[70vh]
-">
-
-          {/* ── TABLET: single column stacked layout ── */}
+          {/* TABLET: single column */}
           <div className="flex flex-col w-full lg:hidden overflow-y-auto">
-
-            {/* Header */}
             <div className="relative flex items-center px-6 pt-4 pb-3 shrink-0 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 {showBack && (
@@ -122,18 +99,8 @@ export default function CheckoutShell({
                 </button>
               </div>
             </div>
-
-            {/* Summary section */}
-            <div className="px-6 py-4">
-              {left}
-            </div>
-
-            {/* Step content */}
-            <div className="flex-1 px-6 pt-4 pb-4">
-              {right}
-            </div>
-
-            {/* Footer */}
+            <div className="px-6 py-4">{left}</div>
+            <div className="flex-1 px-6 pt-4 pb-4">{right}</div>
             {footer && (
               <div className="shrink-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-end shadow-[0_-4px_10px_rgba(0,0,0,0.04)]">
                 {footer}
@@ -141,18 +108,10 @@ export default function CheckoutShell({
             )}
           </div>
 
-          {/* ── DESKTOP: two-column side-by-side layout ── */}
+          {/* DESKTOP: two columns */}
           <div className="hidden lg:flex w-full">
-
-            {/* LEFT */}
-            <div className="w-1/2 bg-white/60 backdrop-blur-sm overflow-y-auto">
-              {left}
-            </div>
-
-            {/* RIGHT */}
+            <div className="w-1/2 bg-gray-50 overflow-y-auto">{left}</div>
             <div className="w-1/2 flex flex-col bg-white">
-
-              {/* Logo + X */}
               <div className="relative flex items-center px-8 pt-4 pb-3 shrink-0">
                 {logoUrl ? (
                   <>
@@ -166,26 +125,15 @@ export default function CheckoutShell({
                   <X size={22} />
                 </button>
               </div>
-
-              {/* Progress */}
               {progress && (
-                <div className="flex justify-end px-8 pb-3 shrink-0 border-b border-gray-100">
-                  {progress}
-                </div>
+                <div className="flex justify-end px-8 pb-3 shrink-0 border-b border-gray-100">{progress}</div>
               )}
-
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto px-8 pt-4">
-                {right}
-              </div>
-
-              {/* Footer */}
+              <div className="flex-1 overflow-y-auto px-8 pt-4">{right}</div>
               {footer && (
                 <div className="shrink-0 bg-white border-t border-gray-100 px-8 py-3 flex justify-end shadow-[0_-4px_10px_rgba(0,0,0,0.04)]">
                   {footer}
                 </div>
               )}
-
             </div>
           </div>
 

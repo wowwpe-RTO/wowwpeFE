@@ -92,7 +92,7 @@ export default function CheckoutShell({
   relative bg-white rounded-2xl shadow-xl flex overflow-hidden
   w-full
   md:max-w-[95vw] md:h-auto md:max-h-[95vh]
-  lg:max-w-[1200px] lg:h-[90vh]
+  lg:max-w-[960px] lg:h-[70vh]
 ">
 
           {/* ── TABLET: single column stacked layout ── */}
@@ -124,7 +124,7 @@ export default function CheckoutShell({
             </div>
 
             {/* Summary section */}
-            <div className="bg-[#F7F7F7] px-6 py-4">
+            <div className="px-6 py-4">
               {left}
             </div>
 

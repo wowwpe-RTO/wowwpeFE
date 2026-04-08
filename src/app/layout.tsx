@@ -10,7 +10,7 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "Wowwpe Checkout",
-  description: "Fast, high-conversion headless checkout",
+  description: "Fast, high-conversion checkout",
 };
 
 export default function RootLayout({

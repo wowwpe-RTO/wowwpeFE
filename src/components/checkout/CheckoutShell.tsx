@@ -86,7 +86,7 @@ export default function CheckoutShell({
           TABLET + DESKTOP LAYOUT — ≥ 768px
           Centered modal, fluid on tablet, fixed on large desktop
       ============================================= */}
-      <div className="hidden md:flex fixed inset-0 bg-black/40 items-center justify-center p-4">
+      <div className="hidden md:flex fixed inset-0 items-center justify-center p-4">
 
         <div className="
           relative bg-white rounded-2xl shadow-xl flex overflow-hidden

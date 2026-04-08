@@ -72,7 +72,7 @@ export default function CheckoutShell({
 
       {/* TABLET + DESKTOP — light blur overlay, no dark background */}
       <div className="hidden md:flex fixed inset-0 items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-2xl flex overflow-hidden w-full md:max-w-[95vw] md:h-auto md:max-h-[95vh] lg:max-w-[960px] lg:h-[70vh]">
+        <div className="lg:max-w-[960px] lg:h-[70vh]">
 
           {/* TABLET: single column */}
           <div className="flex flex-col w-full lg:hidden overflow-y-auto">
@@ -110,7 +110,7 @@ export default function CheckoutShell({
 
           {/* DESKTOP: two columns */}
           <div className="hidden lg:flex w-full">
-            <div className="w-1/2 bg-transparent overflow-y-auto">{left}</div>
+            <div className="w-1/2 bg-gray-50 overflow-y-auto">{left}</div>
             <div className="w-1/2 flex flex-col bg-white">
               <div className="relative flex items-center px-8 pt-4 pb-3 shrink-0">
                 {logoUrl ? (

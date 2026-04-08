@@ -20,9 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={dmSans.variable}>
-      <body
-        className="bg-white text-black font-[family-name:var(--font-dm-sans)]"
-      >
+      <body className="bg-transparent text-black font-[family-name:var(--font-dm-sans)]">
         {children}
       </body>
     </html>

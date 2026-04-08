@@ -86,14 +86,15 @@ export default function CheckoutShell({
           TABLET + DESKTOP LAYOUT — ≥ 768px
           Centered modal, fluid on tablet, fixed on large desktop
       ============================================= */}
-      <div className="hidden bg-black/40 md:flex fixed inset-0 items-center justify-center pointer-events-none">
+      <div className="hidden md:flex fixed inset-0 items-center justify-center pointer-events-none">
 
         <div className="
-  relative bg-white rounded-2xl  flex overflow-hidden
-  w-full
-  md:max-w-[95vw] md:h-auto md:max-h-[95vh]
-  lg:max-w-[960px] lg:h-[70vh]
-">
+    relative bg-white/95 backdrop-blur-md rounded-2xl flex overflow-hidden
+    pointer-events-auto
+    w-full
+    md:max-w-[95vw] md:max-h-[95vh]
+    lg:max-w-[960px] lg:h-[70vh]
+  ">
 
           {/* ── TABLET: single column stacked layout ── */}
           <div className="flex flex-col w-full lg:hidden overflow-y-auto">

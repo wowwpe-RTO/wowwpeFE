@@ -86,7 +86,7 @@ export default function CheckoutShell({
           TABLET + DESKTOP LAYOUT — ≥ 768px
           Centered modal, fluid on tablet, fixed on large desktop
       ============================================= */}
-    
+      <div className="hidden bg-black/40 md:flex fixed inset-0 items-center justify-center pointer-events-none">
 
         <div className="
   relative bg-white rounded-2xl  flex overflow-hidden
@@ -114,7 +114,7 @@ export default function CheckoutShell({
                 ) : (
                   <span className="text-xl font-bold text-gray-900 tracking-tight">{storeName}</span>
                 )}
-             
+              </div>
               <div className="ml-auto flex items-center gap-3">
                 {progress}
                 <button onClick={onClose} className="text-gray-400 hover:text-black transition">

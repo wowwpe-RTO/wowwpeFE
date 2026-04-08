@@ -40,7 +40,7 @@ export default function CheckoutShell({
   return (
     <>
       {/* MOBILE */}
-      <div className="md:hidden flex flex-col min-h-screen bg-white">
+      <div className="md:hidden flex flex-col min-h-screen bg-transparent">
         <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0 border-b border-gray-100">
           <div className="flex items-center gap-2">
             {showBack && (
@@ -72,7 +72,7 @@ export default function CheckoutShell({
 
       {/* TABLET + DESKTOP — light blur overlay, no dark background */}
       <div className="hidden md:flex fixed inset-0 items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-2xl flex overflow-hidden w-full md:max-w-[95vw] md:h-auto md:max-h-[95vh] lg:max-w-[960px] lg:h-[70vh]">
+        <div className="relative bg-transparent rounded-2xl shadow-none flex overflow-hidden md:max-w-[95vw] md:h-auto md:max-h-[95vh] lg:max-w-[960px] lg:h-[70vh]">
 
           {/* TABLET: single column */}
           <div className="flex flex-col w-full lg:hidden overflow-y-auto">

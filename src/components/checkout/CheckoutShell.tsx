@@ -89,7 +89,7 @@ export default function CheckoutShell({
       <div className="hidden md:flex fixed inset-0 items-center justify-center pointer-events-none">
 
         <div className="
-    relative bg-white/95 backdrop-blur-md rounded-2xl flex overflow-hidden
+    relative backdrop-blur-md rounded-2xl flex overflow-hidden
     pointer-events-auto
     w-full
     md:max-w-[95vw] md:max-h-[95vh]

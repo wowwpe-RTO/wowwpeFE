@@ -20,10 +20,6 @@ import Spinner from "@/components/ui/Spinner";
 import { CheckoutContext } from "@/components/contexts/CheckoutContext";
 import type { PreviousAddress } from "@/components/contexts/CheckoutContext";
 
-/* --------------------------------------------------
-   MAIN CONTENT (moved into Suspense-safe component)
--------------------------------------------------- */
-
 function CheckoutPageContent() {
   const searchParams = useSearchParams();
 
@@ -42,25 +38,38 @@ function CheckoutPageContent() {
   const [leftView, setLeftView] = useState<"summary" | "coupons">("summary");
   const [previousAddresses, setPreviousAddresses] = useState<PreviousAddress[]>([]);
 
+  /* =========================
+     FETCH CHECKOUT DETAILS
+  ========================= */
+
   const fetchDetails = useCallback(async () => {
     if (!sessionParam) return;
+
     try {
+      console.log("🔍 Fetching checkout:", sessionParam);
+
       const res = await api<CheckoutDetails>(
         `/checkout/details/${sessionParam}`
       );
+
+      console.log("✅ CHECKOUT DATA:", res);
+
       setDetails(res);
     } catch (err) {
-      console.error("Failed to load checkout:", err);
+      console.error("❌ Failed to load checkout:", err);
     }
   }, [sessionParam]);
 
   useEffect(() => {
     if (!sessionParam) return;
+
     setLoading(true);
     fetchDetails().finally(() => setLoading(false));
   }, [sessionParam, fetchDetails]);
 
-  /* STEP MAPPING */
+  /* =========================
+     STEP LOGIC
+  ========================= */
 
   const currentStep = details?.step;
 
@@ -74,7 +83,9 @@ function CheckoutPageContent() {
       ? "address"
       : "payment";
 
-  /* NAVIGATION */
+  /* =========================
+     NAVIGATION
+  ========================= */
 
   const showBack =
     !!currentStep &&
@@ -92,18 +103,22 @@ function CheckoutPageContent() {
 
   async function handleBack() {
     if (!details?.checkoutSessionId) return;
+
     try {
       await api("/checkout/step/back", {
         method: "POST",
         body: JSON.stringify({ checkoutSessionId: details.checkoutSessionId }),
       });
+
       await fetchDetails();
     } catch (err) {
       console.error("Back failed", err);
     }
   }
 
-  /* FOOTER */
+  /* =========================
+     FOOTER CTA
+  ========================= */
 
   const showFooter =
     currentStep === "CART" ||
@@ -112,6 +127,7 @@ function CheckoutPageContent() {
 
   const handleFooterClick = async () => {
     if (!continueHandler) return;
+
     try {
       setCtaLoading(true);
       await continueHandler();
@@ -152,14 +168,18 @@ function CheckoutPageContent() {
     </button>
   ) : null;
 
-  /* LEFT CONTENT */
+  /* =========================
+     LEFT CONTENT (CART)
+  ========================= */
 
   const leftContent = (
     <>
       <DeliveryBanner />
 
       <div className={leftView === "summary" ? "block" : "hidden"}>
-        {details?.step === "COMPLETED" ? (
+        {!details ? (
+          <div className="p-4">Loading cart...</div>
+        ) : details.step === "COMPLETED" ? (
           <OrderSummary
             checkoutSessionId={null}
             details={details}
@@ -169,7 +189,7 @@ function CheckoutPageContent() {
           sessionParam && (
             <OrderSummary
               checkoutSessionId={sessionParam}
-              details={details || undefined}
+              details={details}   // ✅ FIXED (no undefined)
               mode="preview"
             />
           )
@@ -199,12 +219,16 @@ function CheckoutPageContent() {
     </>
   );
 
-  /* RIGHT CONTENT */
+  /* =========================
+     RIGHT CONTENT
+  ========================= */
 
   const rightContent = (
     <div className="flex flex-col h-full">
       {loading || (sessionParam && !details) ? (
-        <div className="p-8" />
+        <div className="p-8 flex justify-center">
+          <Spinner />
+        </div>
       ) : !sessionParam ? (
         <div className="p-8 text-center text-red-500">
           No session found
@@ -252,9 +276,9 @@ function CheckoutPageContent() {
   );
 }
 
-/* --------------------------------------------------
-   SUSPENSE WRAPPER (CRITICAL FIX)
--------------------------------------------------- */
+/* =========================
+   SUSPENSE WRAPPER
+========================= */
 
 export default function CheckoutPage() {
   return (

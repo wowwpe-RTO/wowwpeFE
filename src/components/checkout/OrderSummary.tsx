@@ -56,98 +56,53 @@ export default function OrderSummary({
 
   const { refreshCheckout } = useCheckout();
 
+  
+
   /* ================================
      FETCH PREVIEW (ONCE)
   ================================= */
 
-  useEffect(() => {
-    if (mode === "final") return;
-    if (!checkoutSessionId) return;
+ useEffect(() => {
+  if (!checkoutSessionId || checkoutSessionId === 'undefined') return;
 
-    let cancelled = false;
+  let cancelled = false;
+  let attempts = 0;
+  const MAX_RETRIES = 5;
+  const RETRY_DELAY = 800; // ms
 
-    async function load() {
-      try {
-        setLoading(true);
-        const res = await api<PreviewResponse>("/checkout/preview", {
-          method: "POST",
-          body: JSON.stringify({ checkoutSessionId }),
-        });
-
-        if (!cancelled) {
-          setPreview(res);
-
-          const compareTotal = res.items.reduce(
-            (sum, i) =>
-              sum + ((i.compare_at_price_paise || i.unit_price_paise) * i.quantity),
-            0
-          );
-          const subtotal = res.items.reduce(
-            (sum, i) => sum + i.unit_price_paise * i.quantity,
-            0
-          );
-          setMrpDiscountPaise(compareTotal > subtotal ? compareTotal - subtotal : 0);
-        }
-      } catch (err) {
-        console.error("Preview failed", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-
-    function handleOptimisticAdd(e: any) {
-      const item = e.detail;
-
-      setPreview((prev) => {
-        if (!prev) return prev;
-
-        const existing = prev.items.find((i) => i.variant_id === item.variant_id);
-        const updatedItems = existing
-          ? prev.items.map((i) =>
-              i.variant_id === item.variant_id
-                ? { ...i, quantity: i.quantity + 1 }
-                : i
-            )
-          : [...prev.items, item];
-
-        const newSubtotal = updatedItems.reduce(
-          (sum, i) => sum + i.unit_price_paise * i.quantity, 0
-        );
-        const newCompareTotal = updatedItems.reduce(
-          (sum, i) =>
-            sum + ((i.compare_at_price_paise || i.unit_price_paise) * i.quantity),
-          0
-        );
-
-        setMrpDiscountPaise(
-          newCompareTotal > newSubtotal ? newCompareTotal - newSubtotal : 0
-        );
-
-        return {
-          ...prev,
-          items: updatedItems,
-          subtotalPaise: newSubtotal,
-          totalPaise: newSubtotal + (prev.shippingPaise || 0),
-        };
+  const fetchPreview = async () => {
+    try {
+      const res = await fetch('/checkout/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkoutSessionId }),
       });
+
+      const data = await res.json();
+
+      if (cancelled) return;
+
+      // Empty items = likely race condition, retry
+      if (!data.items?.length && attempts < MAX_RETRIES) {
+        attempts++;
+        console.warn(`[OrderSummary] Empty items, retry ${attempts}/${MAX_RETRIES}`);
+        setTimeout(fetchPreview, RETRY_DELAY);
+        return;
+      }
+
+      setPreview(data); // or however you set state
+    } catch (err) {
+      if (cancelled) return;
+      console.error('[OrderSummary] Preview fetch failed:', err);
     }
+  };
 
-    function handleCartLoading(e: any) {
-      const { variantId } = e.detail || {};
-      if (variantId) setUpdatingId(variantId);
-    }
+  fetchPreview();
 
-    window.addEventListener("cart-loading", handleCartLoading);
-    window.addEventListener("cart-add-optimistic", handleOptimisticAdd);
-
-    return () => {
-      cancelled = true;
-      window.removeEventListener("cart-add-optimistic", handleOptimisticAdd);
-      window.removeEventListener("cart-loading", handleCartLoading);
-    };
-  }, [checkoutSessionId]);
+  return () => {
+    cancelled = true;
+  };
+}, [checkoutSessionId]);
 
   /* ================================
      COUPON EVENTS

@@ -72,7 +72,7 @@ export default function OrderSummary({
 
   const fetchPreview = async () => {
     try {
-      const res = await fetch('/checkout/preview', {
+      const res = await fetch('https://api.wowwpe.io/checkout/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ checkoutSessionId }),

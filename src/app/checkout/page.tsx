@@ -50,21 +50,13 @@ const sessionParam =
      FETCH CHECKOUT DETAILS
   ========================= */
 
-  const fetchDetails = useCallback(async () => {
+const fetchDetails = useCallback(async () => {
   if (!sessionParam) return;
 
   try {
-    const url = `https://api.wowwpe.io/checkout/details/${sessionParam}`;
-
-    console.log("🌍 FETCHING:", url);
-
-    const res = await fetch(url);
-
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
+    const data = await api<CheckoutDetails>(
+      `/checkout/details/${sessionParam}`
+    );
 
     console.log("✅ CHECKOUT DATA:", data);
 

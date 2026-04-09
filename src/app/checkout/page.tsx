@@ -24,7 +24,15 @@ function CheckoutPageContent() {
   const searchParams = useSearchParams();
 
   const shop = searchParams.get("shop") || "";
-  const sessionParam = searchParams.get("session");
+
+
+const sessionParam =
+  searchParams.get("session") ||
+  (typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("session")
+    : null);
+
+    console.log("SESSION PARAM:", sessionParam);
 
   const [details, setDetails] = useState<CheckoutDetails | null>(null);
   const [loading, setLoading] = useState(false);

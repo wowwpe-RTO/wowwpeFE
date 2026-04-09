@@ -71,7 +71,7 @@ export default function CheckoutShell({
       </div>
 
       {/* TABLET + DESKTOP — light blur overlay, no dark background */}
-      <div className="hidden md:flex fixed inset-0 bg-white/30 backdrop-blur-sm items-center justify-center p-4">
+      <div className="hidden md:flex fixed inset-0 bg-black/40 backdrop-blur-sm items-center justify-center p-4">
         <div className="relative bg-white rounded-2xl shadow-2xl flex overflow-hidden w-full md:max-w-[95vw] md:h-auto md:max-h-[95vh] lg:max-w-[960px] lg:h-[70vh]">
 
           {/* TABLET: single column */}

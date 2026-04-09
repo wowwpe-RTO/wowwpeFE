@@ -51,29 +51,51 @@ const sessionParam =
   ========================= */
 
   const fetchDetails = useCallback(async () => {
-    if (!sessionParam) return;
+  if (!sessionParam) return;
 
-    try {
-      console.log("🔍 Fetching checkout:", sessionParam);
+  try {
+    const url = `https://api.wowwpe.io/checkout/details/${sessionParam}`;
 
-      const res = await api<CheckoutDetails>(
-        `/checkout/details/${sessionParam}`
-      );
+    console.log("🌍 FETCHING:", url);
 
-      console.log("✅ CHECKOUT DATA:", res);
+    const res = await fetch(url);
 
-      setDetails(res);
-    } catch (err) {
-      console.error("❌ Failed to load checkout:", err);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
     }
-  }, [sessionParam]);
 
-  useEffect(() => {
-    if (!sessionParam) return;
+    const data = await res.json();
 
-    setLoading(true);
-    fetchDetails().finally(() => setLoading(false));
-  }, [sessionParam, fetchDetails]);
+    console.log("✅ CHECKOUT DATA:", data);
+
+    setDetails(data);
+  } catch (err) {
+    console.error("❌ Failed to load checkout:", err);
+  }
+}, [sessionParam]);
+
+ useEffect(() => {
+  console.log("🔥 EFFECT RUNNING");
+  console.log("SESSION PARAM:", sessionParam);
+
+  if (!sessionParam) {
+    console.warn("❌ NO SESSION PARAM");
+    return;
+  }
+
+  setLoading(true);
+
+  fetchDetails()
+    .then(() => {
+      console.log("✅ FETCH COMPLETE");
+    })
+    .catch((err) => {
+      console.error("❌ FETCH FAILED:", err);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+}, [sessionParam, fetchDetails]);
 
   /* =========================
      STEP LOGIC
@@ -186,7 +208,9 @@ const sessionParam =
 
       <div className={leftView === "summary" ? "block" : "hidden"}>
         {!details ? (
-          <div className="p-4">Loading cart...</div>
+  <div className="p-4">
+    Loading cart... (session: {sessionParam || "NULL"})
+  </div>
         ) : details.step === "COMPLETED" ? (
           <OrderSummary
             checkoutSessionId={null}

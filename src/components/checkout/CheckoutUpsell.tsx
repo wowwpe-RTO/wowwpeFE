@@ -76,28 +76,28 @@ export default function CheckoutUpsell({
   }, [products, collapsed]);
 
   /* LOAD CART */
-  useEffect(() => {
-    async function loadCartItems() {
-      if (!checkoutSessionId) return;
-      try {
-        const res = await api<{ items: { variant_id: number }[] }>(
-          "/checkout/preview",
-          { method: "POST", body: JSON.stringify({ checkoutSessionId }) }
-        );
-        setCartVariantIds(res.items.map((i) => i.variant_id));
-      } catch {}
-    }
+  // useEffect(() => {
+  //   async function loadCartItems() {
+  //     if (!checkoutSessionId) return;
+  //     try {
+  //       const res = await api<{ items: { variant_id: number }[] }>(
+  //         "/checkout/preview",
+  //         { method: "POST", body: JSON.stringify({ checkoutSessionId }) }
+  //       );
+  //       setCartVariantIds(res.items.map((i) => i.variant_id));
+  //     } catch {}
+  //   }
 
-    loadCartItems();
+  //   loadCartItems();
 
-    function handleRemove(e: any) {
-      const { variantId } = e.detail;
-      setCartVariantIds((prev) => prev.filter((id) => id !== variantId));
-    }
+  //   function handleRemove(e: any) {
+  //     const { variantId } = e.detail;
+  //     setCartVariantIds((prev) => prev.filter((id) => id !== variantId));
+  //   }
 
-    window.addEventListener("cart-remove-optimistic", handleRemove);
-    return () => window.removeEventListener("cart-remove-optimistic", handleRemove);
-  }, [checkoutSessionId]);
+  //   window.addEventListener("cart-remove-optimistic", handleRemove);
+  //   return () => window.removeEventListener("cart-remove-optimistic", handleRemove);
+  // }, [checkoutSessionId]);
 
   /* SCROLL */
   function scroll(dir: "left" | "right") {

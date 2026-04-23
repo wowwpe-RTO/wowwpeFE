@@ -66,9 +66,7 @@ export default function OrderSummary({
   if (!checkoutSessionId || checkoutSessionId === 'undefined') return;
 
   let cancelled = false;
-  let attempts = 0;
-  const MAX_RETRIES = 5;
-  const RETRY_DELAY = 800; // ms
+  
 
   const fetchPreview = async () => {
     try {
@@ -80,12 +78,10 @@ export default function OrderSummary({
       if (cancelled) return;
 
       // Empty items = likely race condition, retry
-      if (!data.items?.length && attempts < MAX_RETRIES) {
-        attempts++;
-        console.warn(`[OrderSummary] Empty items, retry ${attempts}/${MAX_RETRIES}`);
-        setTimeout(fetchPreview, RETRY_DELAY);
-        return;
-      }
+      if (!data.items?.length) {
+  console.warn("[OrderSummary] Empty preview — skipping retry");
+  return;
+}
 
       setPreview(data); // or however you set state
     } catch (err) {

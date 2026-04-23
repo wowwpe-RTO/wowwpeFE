@@ -3,6 +3,7 @@
 import { ReactNode, useEffect } from "react";
 import { CheckoutDetails } from "@/lib/types";
 import { X, ChevronLeft } from "lucide-react";
+import { useSearchParams } from 'next/navigation';
 
 export default function CheckoutShell({
   left,

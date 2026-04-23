@@ -52,6 +52,8 @@ export default function CouponModal({
 
   
 
+  
+
   useEffect(() => {
     if (!open) return;
 
@@ -74,6 +76,8 @@ setCoupons(data || []);
 
     load();
   }, [open]);
+
+
 
   async function applyCoupon(code: string) {
     if (!checkoutSessionId) return;
@@ -103,6 +107,7 @@ setCoupons(data || []);
     }
   }
 
+  
   
 
   if (!open) return null;

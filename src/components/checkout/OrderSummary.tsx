@@ -6,7 +6,6 @@ import { Plus, Minus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { CheckoutDetails } from "@/lib/types";
 import { useCheckout } from "../contexts/CheckoutContext";
 
-
 type PreviewItem = {
   variant_id: number;
   product_title: string;
@@ -66,24 +65,36 @@ export default function OrderSummary({
 const fetchedRef = useRef<string | null>(null);
 
 useEffect(() => {
-  if (!checkoutSessionId || fetchedRef.current === checkoutSessionId) return;
+  if (!checkoutSessionId || checkoutSessionId === "undefined") return;
+
+  if (fetchedRef.current === checkoutSessionId) return;
 
   fetchedRef.current = checkoutSessionId;
 
   let cancelled = false;
 
-  async function fetchPreview() {
+  const fetchPreview = async () => {
     try {
-      const res = await api<PreviewResponse>(`/checkout/preview?...`);
+      const data = await api<PreviewResponse>("/checkout/preview", {
+        method: "POST",
+        body: JSON.stringify({ checkoutSessionId }),
+      });
 
-      if (!cancelled) {
-        setPreview(res);
+      if (cancelled) return;
+
+      if (!data.items?.length) {
+        console.warn("[OrderSummary] Empty preview — skipping");
+        fetchedRef.current = null; // allow retry
+        return;
       }
+
+      setPreview(data);
     } catch (err) {
-      console.error(err);
-      fetchedRef.current = null;
+      if (cancelled) return;
+      fetchedRef.current = null; // allow retry on error
+      console.error("[OrderSummary] Preview fetch failed:", err);
     }
-  }
+  };
 
   fetchPreview();
 

@@ -18,5 +18,5 @@ export async function api<T>(
     throw new Error(error.error || "API error");
   }
 
-  return (await res.json()) as T;
+  return await res.json();
 }

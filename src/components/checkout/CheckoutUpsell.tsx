@@ -39,31 +39,41 @@ export default function CheckoutUpsell({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   /* LOAD PRODUCTS */
-  const fetchedRef = useRef<string | null>(null);
+
+const fetchedRef = useRef<string | null>(null);
 
 useEffect(() => {
- if (!checkoutSessionId || fetchedRef.current === checkoutSessionId) return;
+  if (!checkoutSessionId || fetchedRef.current === checkoutSessionId) return;
 
-fetchedRef.current = checkoutSessionId;
+  fetchedRef.current = checkoutSessionId;
 
- 
+  let cancelled = false;
 
   async function load() {
     try {
       const res = await api<{ products: UpsellProduct[] }>(
         `/checkout/upsell?shop=${shop}`
       );
-      setProducts(res.products);
+
+      if (!cancelled) {
+        setProducts(res.products);
+      }
     } catch (err) {
       console.error("Upsell load failed", err);
       fetchedRef.current = null;
     } finally {
-      setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+      }
     }
   }
 
   load();
-}, [checkoutSessionId]);
+
+  return () => {
+    cancelled = true;
+  };
+}, [checkoutSessionId]); // ✅ ONLY THIS
 
   /* TRACK SCROLL POSITION */
   useEffect(() => {

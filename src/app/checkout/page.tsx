@@ -1,9 +1,7 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { CheckoutDetails } from "@/lib/types";
 
@@ -20,19 +18,12 @@ import Spinner from "@/components/ui/Spinner";
 import { CheckoutContext } from "@/components/contexts/CheckoutContext";
 import type { PreviousAddress } from "@/components/contexts/CheckoutContext";
 
-function CheckoutPageContent() {
+export default function CheckoutPage() {
+
   const searchParams = useSearchParams();
 
   const shop = searchParams.get("shop") || "";
-
-
-const sessionParam =
-  searchParams.get("session") ||
-  (typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("session")
-    : null);
-
-    console.log("SESSION PARAM:", sessionParam);
+  const sessionParam = searchParams.get("session");
 
   const [details, setDetails] = useState<CheckoutDetails | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,52 +37,34 @@ const sessionParam =
   const [leftView, setLeftView] = useState<"summary" | "coupons">("summary");
   const [previousAddresses, setPreviousAddresses] = useState<PreviousAddress[]>([]);
 
-  /* =========================
-     FETCH CHECKOUT DETAILS
-  ========================= */
+  // DEBUG — remove after fix
+  useEffect(() => {
+    console.log("[page] previousAddresses changed:", previousAddresses.length);
+  }, [previousAddresses]);
 
-const fetchDetails = useCallback(async () => {
-  if (!sessionParam) return;
+  console.log("[page] previousAddresses:", previousAddresses?.length, "step:", details?.step);
 
-  try {
-    const data = await api<CheckoutDetails>(
-      `/checkout/details/${sessionParam}`
-    );
+  const fetchDetails = useCallback(async () => {
+    if (!sessionParam) return;
+    try {
+      const res = await api<CheckoutDetails>(
+        `/checkout/details/${sessionParam}`
+      );
+      setDetails(res);
+    } catch (err) {
+      console.error("Failed to load checkout:", err);
+    }
+  }, [sessionParam]);
 
-    console.log("✅ CHECKOUT DATA:", data);
+  useEffect(() => {
+    if (!sessionParam) return;
+    setLoading(true);
+    fetchDetails().finally(() => setLoading(false));
+  }, [sessionParam, fetchDetails]);
 
-    setDetails(data);
-  } catch (err) {
-    console.error("❌ Failed to load checkout:", err);
-  }
-}, [sessionParam]);
-
- useEffect(() => {
-  console.log("🔥 EFFECT RUNNING");
-  console.log("SESSION PARAM:", sessionParam);
-
-  if (!sessionParam) {
-    console.warn("❌ NO SESSION PARAM");
-    return;
-  }
-
-  setLoading(true);
-
-  fetchDetails()
-    .then(() => {
-      console.log("✅ FETCH COMPLETE");
-    })
-    .catch((err) => {
-      console.error("❌ FETCH FAILED:", err);
-    })
-    .finally(() => {
-      setLoading(false);
-    });
-}, [sessionParam, fetchDetails]);
-
-  /* =========================
-     STEP LOGIC
-  ========================= */
+  /* --------------------------------------------------
+     STEP MAPPING
+  -------------------------------------------------- */
 
   const currentStep = details?.step;
 
@@ -105,9 +78,9 @@ const fetchDetails = useCallback(async () => {
       ? "address"
       : "payment";
 
-  /* =========================
-     NAVIGATION
-  ========================= */
+  /* --------------------------------------------------
+     MOBILE BACK NAVIGATION
+  -------------------------------------------------- */
 
   const showBack =
     !!currentStep &&
@@ -116,31 +89,31 @@ const fetchDetails = useCallback(async () => {
     currentStep !== "FAILED";
 
   function handleClose() {
-    if (typeof window !== "undefined" && window.opener) {
+    if (window.opener) {
       window.close();
-    } else if (typeof window !== "undefined") {
+    } else {
       window.history.back();
     }
   }
 
   async function handleBack() {
     if (!details?.checkoutSessionId) return;
-
     try {
       await api("/checkout/step/back", {
         method: "POST",
         body: JSON.stringify({ checkoutSessionId: details.checkoutSessionId }),
       });
-
       await fetchDetails();
     } catch (err) {
       console.error("Back failed", err);
     }
   }
 
-  /* =========================
+  /* --------------------------------------------------
      FOOTER CTA
-  ========================= */
+     - Desktop: w-40 h-12, right-aligned (unchanged)
+     - Mobile: full width, rounded-2xl
+  -------------------------------------------------- */
 
   const showFooter =
     currentStep === "CART" ||
@@ -149,7 +122,6 @@ const fetchDetails = useCallback(async () => {
 
   const handleFooterClick = async () => {
     if (!continueHandler) return;
-
     try {
       setCtaLoading(true);
       await continueHandler();
@@ -168,10 +140,9 @@ const fetchDetails = useCallback(async () => {
         w-full h-14 rounded-2xl
         md:w-full md:h-12 md:rounded-xl
         lg:w-40 lg:h-12 lg:rounded-xl
-        ${
-          canContinue && !ctaLoading
-            ? "bg-[#0B7E63] hover:bg-green-700"
-            : "bg-gray-300 cursor-not-allowed"
+        ${canContinue && !ctaLoading
+          ? "bg-[#0B7E63] hover:bg-green-700"
+          : "bg-gray-300 cursor-not-allowed"
         }
       `}
     >
@@ -180,43 +151,29 @@ const fetchDetails = useCallback(async () => {
           <Spinner size={18} />
         </span>
       )}
-      <span
-        className={`transition-opacity duration-200 ${
-          ctaLoading ? "opacity-0" : "opacity-100"
-        }`}
-      >
+      <span className={`transition-opacity duration-200 ${ctaLoading ? "opacity-0" : "opacity-100"}`}>
         Continue
       </span>
     </button>
   ) : null;
 
-  /* =========================
-     LEFT CONTENT (CART)
-  ========================= */
+  /* --------------------------------------------------
+     LEFT PANEL CONTENT (summary, coupon banner, upsell)
+     Shared between desktop left panel and mobile top section
+  -------------------------------------------------- */
 
   const leftContent = (
     <>
       <DeliveryBanner />
 
       <div className={leftView === "summary" ? "block" : "hidden"}>
-        {!details ? (
-  <div className="p-4">
-    Loading cart... (session: {sessionParam || "NULL"})
-  </div>
-        ) : details.step === "COMPLETED" ? (
+
+        {sessionParam && (
           <OrderSummary
-            checkoutSessionId={null}
-            details={details}
-            mode="final"
+            checkoutSessionId={sessionParam}
+            details={details ?? undefined}
+            mode={details?.step === "COMPLETED" ? "final" : "preview"}
           />
-        ) : (
-          sessionParam && (
-            <OrderSummary
-              checkoutSessionId={sessionParam}
-              details={details}   // ✅ FIXED (no undefined)
-              mode="preview"
-            />
-          )
         )}
 
         <div className="mt-4">
@@ -232,6 +189,7 @@ const fetchDetails = useCallback(async () => {
             checkoutSessionId={details?.checkoutSessionId}
           />
         </div>
+
       </div>
 
       {leftView === "coupons" && (
@@ -243,16 +201,14 @@ const fetchDetails = useCallback(async () => {
     </>
   );
 
-  /* =========================
-     RIGHT CONTENT
-  ========================= */
+  /* --------------------------------------------------
+     RIGHT PANEL CONTENT (step forms)
+  -------------------------------------------------- */
 
   const rightContent = (
     <div className="flex flex-col h-full">
       {loading || (sessionParam && !details) ? (
-        <div className="p-8 flex justify-center">
-          <Spinner />
-        </div>
+        <div className="p-8" />
       ) : !sessionParam ? (
         <div className="p-8 text-center text-red-500">
           No session found
@@ -278,14 +234,8 @@ const fetchDetails = useCallback(async () => {
   );
 
   return (
-    <CheckoutContext.Provider
-      value={{
-        details,
-        refreshCheckout: fetchDetails,
-        previousAddresses,
-        setPreviousAddresses,
-      }}
-    >
+    <CheckoutContext.Provider value={{ details, refreshCheckout: fetchDetails, previousAddresses, setPreviousAddresses }}>
+
       <CheckoutShell
         footer={footerCTA}
         details={details}
@@ -293,21 +243,14 @@ const fetchDetails = useCallback(async () => {
         showBack={showBack}
         onBack={handleBack}
         onClose={handleClose}
-        left={<div className="p-4 md:p-6 space-y-4">{leftContent}</div>}
+        left={
+          <div className="p-4 md:p-6 space-y-4">
+            {leftContent}
+          </div>
+        }
         right={rightContent}
       />
+
     </CheckoutContext.Provider>
-  );
-}
-
-/* =========================
-   SUSPENSE WRAPPER
-========================= */
-
-export default function CheckoutPage() {
-  return (
-    <Suspense fallback={<div className="p-8"><Spinner /></div>}>
-      <CheckoutPageContent />
-    </Suspense>
   );
 }

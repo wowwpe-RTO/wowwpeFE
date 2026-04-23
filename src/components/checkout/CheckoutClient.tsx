@@ -1,7 +1,8 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import React from "react";
 import { api } from "@/lib/api";
 import { CheckoutDetails } from "@/lib/types";
 
@@ -18,8 +19,67 @@ import Spinner from "@/components/ui/Spinner";
 import { CheckoutContext } from "@/components/contexts/CheckoutContext";
 import type { PreviousAddress } from "@/components/contexts/CheckoutContext";
 
-export default function CheckoutPage() {
+/* ─────────────────────────────────────────────────────────────
+   LEFT PANEL — memoized so it never unmounts on parent re-render
+   OrderSummary + CheckoutUpsell effects fire exactly once
+───────────────────────────────────────────────────────────── */
 
+const LeftPanel = React.memo(function LeftPanel({
+  leftView,
+  setLeftView,
+  sessionParam,
+  details,
+  shop,
+}: {
+  leftView: "summary" | "coupons";
+  setLeftView: (v: "summary" | "coupons") => void;
+  sessionParam: string | null;
+  details: CheckoutDetails | null;
+  shop: string;
+}) {
+  return (
+    <div className="p-4 md:p-6 space-y-4">
+      <DeliveryBanner />
+
+      <div className={leftView === "summary" ? "block" : "hidden"}>
+        {sessionParam && (
+          <OrderSummary
+            checkoutSessionId={sessionParam}
+            details={details ?? undefined}
+            mode={details?.step === "COMPLETED" ? "final" : "preview"}
+          />
+        )}
+
+        <div className="mt-4">
+          <CouponBanner
+            onClick={() => setLeftView("coupons")}
+            checkoutSessionId={details?.checkoutSessionId}
+          />
+        </div>
+
+        <div className="mt-4">
+          <CheckoutUpsell
+            shop={shop}
+            checkoutSessionId={details?.checkoutSessionId}
+          />
+        </div>
+      </div>
+
+      {leftView === "coupons" && (
+        <CouponView
+          checkoutSessionId={details?.checkoutSessionId}
+          onBack={() => setLeftView("summary")}
+        />
+      )}
+    </div>
+  );
+});
+
+/* ─────────────────────────────────────────────────────────────
+   CHECKOUT PAGE
+───────────────────────────────────────────────────────────── */
+
+export default function CheckoutPage() {
   const searchParams = useSearchParams();
 
   const shop = searchParams.get("shop") || "";
@@ -29,20 +89,12 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
 
   const [canContinue, setCanContinue] = useState(false);
-  const [continueHandler, setContinueHandler] = useState<
-    (() => Promise<void> | void) | null
-  >(null);
+// ✅ replace with
+const continueHandlerRef = React.useRef<(() => Promise<void> | void) | null>(null);
   const [ctaLoading, setCtaLoading] = useState(false);
 
   const [leftView, setLeftView] = useState<"summary" | "coupons">("summary");
   const [previousAddresses, setPreviousAddresses] = useState<PreviousAddress[]>([]);
-
-  // DEBUG — remove after fix
-  useEffect(() => {
-    console.log("[page] previousAddresses changed:", previousAddresses.length);
-  }, [previousAddresses]);
-
-  console.log("[page] previousAddresses:", previousAddresses?.length, "step:", details?.step);
 
   const fetchDetails = useCallback(async () => {
     if (!sessionParam) return;
@@ -111,8 +163,6 @@ export default function CheckoutPage() {
 
   /* --------------------------------------------------
      FOOTER CTA
-     - Desktop: w-40 h-12, right-aligned (unchanged)
-     - Mobile: full width, rounded-2xl
   -------------------------------------------------- */
 
   const showFooter =
@@ -120,20 +170,22 @@ export default function CheckoutPage() {
     currentStep === "OTP_VERIFIED" ||
     currentStep === "ADDRESS_SAVED";
 
-  const handleFooterClick = async () => {
-    if (!continueHandler) return;
-    try {
-      setCtaLoading(true);
-      await continueHandler();
-    } finally {
-      setCtaLoading(false);
-    }
-  };
+  // ✅ replace with
+const handleFooterClick = async () => {
+  if (!continueHandlerRef.current) return;
+  try {
+    setCtaLoading(true);
+    await continueHandlerRef.current();
+  } finally {
+    setCtaLoading(false);
+  }
+};
 
   const footerCTA = showFooter ? (
     <button
       onClick={handleFooterClick}
-      disabled={!canContinue || ctaLoading}
+      // ✅
+disabled={!canContinue || ctaLoading || !continueHandlerRef.current}
       className={`
         relative font-semibold text-white transition
         flex items-center justify-center
@@ -158,51 +210,7 @@ export default function CheckoutPage() {
   ) : null;
 
   /* --------------------------------------------------
-     LEFT PANEL CONTENT (summary, coupon banner, upsell)
-     Shared between desktop left panel and mobile top section
-  -------------------------------------------------- */
-
-  const leftContent = (
-    <>
-      <DeliveryBanner />
-
-      <div className={leftView === "summary" ? "block" : "hidden"}>
-
-        {sessionParam && (
-          <OrderSummary
-            checkoutSessionId={sessionParam}
-            details={details ?? undefined}
-            mode={details?.step === "COMPLETED" ? "final" : "preview"}
-          />
-        )}
-
-        <div className="mt-4">
-          <CouponBanner
-            onClick={() => setLeftView("coupons")}
-            checkoutSessionId={details?.checkoutSessionId}
-          />
-        </div>
-
-        <div className="mt-4">
-          <CheckoutUpsell
-            shop={shop}
-            checkoutSessionId={details?.checkoutSessionId}
-          />
-        </div>
-
-      </div>
-
-      {leftView === "coupons" && (
-        <CouponView
-          checkoutSessionId={details?.checkoutSessionId}
-          onBack={() => setLeftView("summary")}
-        />
-      )}
-    </>
-  );
-
-  /* --------------------------------------------------
-     RIGHT PANEL CONTENT (step forms)
+     RIGHT PANEL CONTENT
   -------------------------------------------------- */
 
   const rightContent = (
@@ -219,7 +227,8 @@ export default function CheckoutPage() {
           checkoutSessionId={details.checkoutSessionId}
           onCheckoutStarted={fetchDetails}
           setCanContinue={setCanContinue}
-          registerContinue={setContinueHandler}
+          // ✅
+registerContinue={(fn) => { continueHandlerRef.current = fn; }}
         />
       ) : (
         <StepRenderer
@@ -227,15 +236,27 @@ export default function CheckoutPage() {
           refresh={fetchDetails}
           shop={shop}
           setCanContinue={setCanContinue}
-          registerContinue={setContinueHandler}
+          registerContinue={(fn) => { continueHandlerRef.current = fn; }}
         />
       )}
     </div>
   );
 
-  return (
-    <CheckoutContext.Provider value={{ details, refreshCheckout: fetchDetails, previousAddresses, setPreviousAddresses }}>
+  /* --------------------------------------------------
+     STABLE CONTEXT VALUE
+  -------------------------------------------------- */
 
+  const contextValue = useMemo(
+    () => ({ details, refreshCheckout: fetchDetails, previousAddresses, setPreviousAddresses }),
+    [details, fetchDetails, previousAddresses]
+  );
+
+  /* --------------------------------------------------
+     RENDER
+  -------------------------------------------------- */
+
+  return (
+    <CheckoutContext.Provider value={contextValue}>
       <CheckoutShell
         footer={footerCTA}
         details={details}
@@ -244,13 +265,16 @@ export default function CheckoutPage() {
         onBack={handleBack}
         onClose={handleClose}
         left={
-          <div className="p-4 md:p-6 space-y-4">
-            {leftContent}
-          </div>
+          <LeftPanel
+            leftView={leftView}
+            setLeftView={setLeftView}
+            sessionParam={sessionParam}
+            details={details}
+            shop={shop}
+          />
         }
         right={rightContent}
       />
-
     </CheckoutContext.Provider>
   );
 }

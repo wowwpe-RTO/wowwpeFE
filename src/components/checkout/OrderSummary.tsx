@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { Plus, Minus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { CheckoutDetails } from "@/lib/types";
@@ -62,31 +62,35 @@ export default function OrderSummary({
      FETCH PREVIEW (ONCE)
   ================================= */
 
- useEffect(() => {
-  if (!checkoutSessionId || checkoutSessionId === 'undefined') return;
+const fetchedRef = useRef(false);
+
+useEffect(() => {
+  if (!checkoutSessionId || checkoutSessionId === "undefined") return;
+  if (fetchedRef.current) return;
+  fetchedRef.current = true;
 
   let cancelled = false;
-  
 
   const fetchPreview = async () => {
     try {
-      const data = await api<PreviewResponse>('/checkout/preview', {
-  method: 'POST',
-  body: JSON.stringify({ checkoutSessionId }),
-});
+      const data = await api<PreviewResponse>("/checkout/preview", {
+        method: "POST",
+        body: JSON.stringify({ checkoutSessionId }),
+      });
 
       if (cancelled) return;
 
-      // Empty items = likely race condition, retry
       if (!data.items?.length) {
-  console.warn("[OrderSummary] Empty preview — skipping retry");
-  return;
-}
+        console.warn("[OrderSummary] Empty preview — skipping");
+        fetchedRef.current = false; // allow retry if empty
+        return;
+      }
 
-      setPreview(data); // or however you set state
+      setPreview(data);
     } catch (err) {
       if (cancelled) return;
-      console.error('[OrderSummary] Preview fetch failed:', err);
+      fetchedRef.current = false; // allow retry on error
+      console.error("[OrderSummary] Preview fetch failed:", err);
     }
   };
 

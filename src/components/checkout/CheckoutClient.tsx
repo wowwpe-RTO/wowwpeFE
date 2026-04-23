@@ -96,6 +96,14 @@ const continueHandlerRef = React.useRef<(() => Promise<void> | void) | null>(nul
   const [leftView, setLeftView] = useState<"summary" | "coupons">("summary");
   const [previousAddresses, setPreviousAddresses] = useState<PreviousAddress[]>([]);
 
+  const stableLeftProps = useMemo(() => ({
+  leftView,
+  setLeftView,
+  sessionParam,
+  details,
+  shop,
+}), [leftView, sessionParam, details, shop]);
+
   const fetchDetails = useCallback(async () => {
     if (!sessionParam) return;
     try {
@@ -265,13 +273,7 @@ registerContinue={(fn) => { continueHandlerRef.current = fn; }}
         onBack={handleBack}
         onClose={handleClose}
         left={
-          <LeftPanel
-            leftView={leftView}
-            setLeftView={setLeftView}
-            sessionParam={sessionParam}
-            details={details}
-            shop={shop}
-          />
+          <LeftPanel {...stableLeftProps} />
         }
         right={rightContent}
       />

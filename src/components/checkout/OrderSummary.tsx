@@ -62,12 +62,14 @@ export default function OrderSummary({
      FETCH PREVIEW (ONCE)
   ================================= */
 
-const fetchedRef = useRef(false);
+const fetchedRef = useRef<string | null>(null);
 
 useEffect(() => {
   if (!checkoutSessionId || checkoutSessionId === "undefined") return;
-  if (fetchedRef.current) return;
-  fetchedRef.current = true;
+
+  if (fetchedRef.current === checkoutSessionId) return;
+
+  fetchedRef.current = checkoutSessionId;
 
   let cancelled = false;
 
@@ -82,14 +84,14 @@ useEffect(() => {
 
       if (!data.items?.length) {
         console.warn("[OrderSummary] Empty preview — skipping");
-        fetchedRef.current = false; // allow retry if empty
+        fetchedRef.current = null; // allow retry
         return;
       }
 
       setPreview(data);
     } catch (err) {
       if (cancelled) return;
-      fetchedRef.current = false; // allow retry on error
+      fetchedRef.current = null; // allow retry on error
       console.error("[OrderSummary] Preview fetch failed:", err);
     }
   };

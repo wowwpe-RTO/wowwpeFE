@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp, ChevronRight, ChevronLeft, Check } from "lucide-react";
 import { api } from "@/lib/api";
-import { useCheckout } from "../contexts/CheckoutContext";
 
 type UpsellProduct = {
   id: number;
@@ -40,26 +39,31 @@ export default function CheckoutUpsell({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   /* LOAD PRODUCTS */
-  const fetchedRef = useRef(false);
+  const fetchedRef = useRef<string | null>(null);
 
 useEffect(() => {
-  if (!shop || fetchedRef.current) return;
-  fetchedRef.current = true;
+ if (!checkoutSessionId || fetchedRef.current === checkoutSessionId) return;
+
+fetchedRef.current = checkoutSessionId;
+
+ 
 
   async function load() {
     try {
-      const res = await api<{ products: UpsellProduct[] }>(`/checkout/upsell?shop=${shop}`);
+      const res = await api<{ products: UpsellProduct[] }>(
+        `/checkout/upsell?shop=${shop}`
+      );
       setProducts(res.products);
     } catch (err) {
       console.error("Upsell load failed", err);
-      fetchedRef.current = false; // allow retry on error
+      fetchedRef.current = null;
     } finally {
       setLoading(false);
     }
   }
 
   load();
-}, [shop]);
+}, [checkoutSessionId]);
 
   /* TRACK SCROLL POSITION */
   useEffect(() => {

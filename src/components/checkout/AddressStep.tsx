@@ -244,11 +244,11 @@ export default function AddressStep({
     } finally {
       setLoading(false);
     }
-  }, [showForm, isValid, form, addresses, selectedId, sessionId]);
+ }, [showForm, isValid, form, addresses, selectedId, sessionId, onSaved]);
 
-  useEffect(() => {
-    registerContinue(() => handleSave);
-  }, [handleSave, registerContinue]);
+ useEffect(() => {
+  registerContinue(handleSave);
+}, [handleSave, registerContinue]);
 
   function deleteAddress(id: string) {
     // Context addresses can't be deleted — only user-added extras

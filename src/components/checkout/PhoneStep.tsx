@@ -49,16 +49,15 @@ export default function PhoneStep({
     } finally {
       setLoading(false);
     }
-  }, [phone, isValidPhone, checkoutSessionId]);
+  }, [phone, isValidPhone, checkoutSessionId, shop]);
 
   useEffect(() => {
     setCanContinue(isValidPhone);
   }, [isValidPhone, setCanContinue]);
 
   useEffect(() => {
-    registerContinue(() => handleContinue);
-  }, [handleContinue, registerContinue]);
-
+  registerContinue(handleContinue);
+}, [handleContinue, registerContinue]);
   /* SKELETON */
   if (hydrating) {
     return (
